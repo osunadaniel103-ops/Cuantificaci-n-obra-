@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora y Cuantificación de Materiales de Obra</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @media print {
+            body {
+                background: white !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-shadow-none {
+                box-shadow: none !important;
+                border: 1px solid #e2e8f0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-amber-500 p-2.5 rounded-xl text-slate-900 shadow-md">
+                    <i class="fa-solid fa-hard-hat text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">ConstruApp <span class="text-amber-400 text-sm font-normal">| Cuantificador Profesional</span></h1>
+                    <p class="text-xs text-slate-400">Calcula materiales precisos para obra civil, muros, concreto, pisos y pintura</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 no-print">
+                <button onclick="app.resetAllData()" class="px-3 py-2 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition border border-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-right"></i> Reiniciar Datos
+                </button>
+                <button onclick="window.print()" class="px-3 py-2 text-xs font-medium bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold rounded-lg transition shadow flex items-center gap-1.5">
+                    <i class="fa-solid fa-print"></i> Imprimir / Reporte
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 w-full flex-grow grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left 2 Columns: Calculators & Tabs -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Tab Navigation Buttons -->
+            <div class="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap gap-2 no-print">
+                <button onclick="app.switchTab('mamposteria')" id="tab-btn-mamposteria" class="flex-1 min-w-[110px] py-2.5 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 bg-amber-500 text-slate-900 shadow-sm">
+                    <i class="fa-solid fa-cubes"></i> Mampostería
+                </button>
+                <button onclick="app.switchTab('concreto')" id="tab-btn-concreto" class="flex-1 min-w-[110px] py-2.5 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200">
+                    <i class="fa-solid fa-building"></i> Concreto
+                </button>
+                <button onclick="app.switchTab('pintura')" id="tab-btn-pintura" class="flex-1 min-w-[110px] py-2.5 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200">
+                    <i class="fa-solid fa-paint-roller"></i> Pintura
+                </button>
+                <button onclick="app.switchTab('pisos')" id="tab-btn-pisos" class="flex-1 min-w-[110px] py-2.5 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200">
+                    <i class="fa-solid fa-border-all"></i> Pisos / Azulejos
+                </button>
+            </div>
+
+            <!-- Tab Content: Mamposteria -->
+            <div id="tab-mamposteria" class="tab-content bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-cubes text-amber-500"></i> Mampostería / Muros
+                        </h2>
+                        <p class="text-xs text-slate-500">Calcula ladrillos o bloques, mortero de pega y desperdicio por m² de muro.</p>
+                    </div>
+                    <span class="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-medium border border-amber-200">Muros y Tabiques</span>
+                </div>
+
+                <form id="form-mamposteria" onsubmit="app.calcularMamposteria(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Área del Muro (m²)</label>
+                            <input type="number" step="0.01" id="mamp-area" required min="0.1" placeholder="Ej. 25.5" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Tipo de Pieza / Ladrillo</label>
+                            <select id="mamp-tipo" onchange="app.actualizarConfigMamposteria()" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                                <option value="ladrillo_rojo">Ladrillo Rojo Común (24x11.5x5 cm)</option>
+                                <option value="bloque_concreto">Bloque de Concreto Estándar (40x20x15 cm)</option>
+                                <option value="block_hueco">Bloque Cerámico / Hueco (30x15x15 cm)</option>
+                                <option value="personalizado">Personalizado (Dimensiones propias)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dimensiones Personalizadas (Ocultas por defecto) -->
+                    <div id="mamp-custom-dims" class="hidden grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Largo de la pieza (cm)</label>
+                            <input type="number" step="0.1" id="mamp-largo" value="24" class="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Alto de la pieza (cm)</label>
+                            <input type="number" step="0.1" id="mamp-alto" value="7" class="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-lg">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Espesor de junta (cm)</label>
+                            <input type="number" step="0.1" id="mamp-junta" value="1.5" min="0.5" max="5" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Desperdicio (%)</label>
+                            <input type="number" step="1" id="mamp-desperdicio" value="7" min="0" max="25" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-xl transition shadow text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-calculator text-amber-400"></i> Calcular Mampostería y Mortero
+                    </button>
+                </form>
+
+                <!-- Resultados Mamposteria -->
+                <div id="res-mamposteria" class="mt-6 hidden pt-6 border-t border-slate-100">
+                    <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-check text-emerald-600"></i> Resultados Obtenidos
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="mamposteria-cards-result">
+                        <!-- Inyectado por JS -->
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button onclick="app.agregarAlPresupuesto('mamposteria')" class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-4 py-2 rounded-xl text-xs transition shadow flex items-center gap-1.5">
+                            <i class="fa-solid fa-cart-plus"></i> Agregar al Presupuesto Global
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Concreto -->
+            <div id="tab-concreto" class="tab-content hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-building text-amber-500"></i> Concreto (Losas, Zapatas, Columnas)
+                        </h2>
+                        <p class="text-xs text-slate-500">Cálculo de volumen cúbico y componentes de mezcla (cemento, arena, grava).</p>
+                    </div>
+                    <span class="text-xs bg-sky-50 text-sky-700 px-2.5 py-1 rounded-full font-medium border border-sky-200">Volumen y Dosificación</span>
+                </div>
+
+                <form id="form-concreto" onsubmit="app.calcularConcreto(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Largo (m)</label>
+                            <input type="number" step="0.01" id="conc-largo" required min="0.1" placeholder="Ej. 5.0" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Ancho (m)</label>
+                            <input type="number" step="0.01" id="conc-ancho" required min="0.1" placeholder="Ej. 4.0" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Espesor / Altura (m)</label>
+                            <input type="number" step="0.01" id="conc-espesor" required min="0.01" placeholder="Ej. 0.15" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Dosificación / Resistencia</label>
+                            <select id="conc-dosificacion" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                                <option value="200">F'c 200 kg/cm² (1:2:3 - Cimentaciones/Pisos)</option>
+                                <option value="250" selected>F'c 250 kg/cm² (1:2:2.5 - Losas y Trabes)</option>
+                                <option value="300">F'c 300 kg/cm² (1:1.5:2 - Alta Resistencia)</option>
+                                <option value="pobre">Concreto Pobre / Plantilla (1:3:5)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Desperdicio por Huecos/Fugas (%)</label>
+                            <input type="number" step="1" id="conc-desperdicio" value="5" min="0" max="20" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-xl transition shadow text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-calculator text-amber-400"></i> Calcular Volumen y Materiales
+                    </button>
+                </form>
+
+                <!-- Resultados Concreto -->
+                <div id="res-concreto" class="mt-6 hidden pt-6 border-t border-slate-100">
+                    <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-check text-emerald-600"></i> Resultados Obtenidos
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3" id="concreto-cards-result">
+                        <!-- Inyectado por JS -->
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button onclick="app.agregarAlPresupuesto('concreto')" class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-4 py-2 rounded-xl text-xs transition shadow flex items-center gap-1.5">
+                            <i class="fa-solid fa-cart-plus"></i> Agregar al Presupuesto Global
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Pintura -->
+            <div id="tab-pintura" class="tab-content hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-paint-roller text-amber-500"></i> Pintura en Muros y Techos
+                        </h2>
+                        <p class="text-xs text-slate-500">Cálculo de galones o litros de pintura requeridos considerando manos de aplicación.</p>
+                    </div>
+                    <span class="text-xs bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full font-medium border border-purple-200">Acabados</span>
+                </div>
+
+                <form id="form-pintura" onsubmit="app.calcularPintura(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Área a Pintar (m²)</label>
+                            <input type="number" step="0.01" id="pint-area" required min="0.1" placeholder="Ej. 60.0" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Número de Manos (Capas)</label>
+                            <input type="number" step="1" id="pint-manos" required min="1" max="5" value="2" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Rendimiento por Litro (m²/L)</label>
+                            <input type="number" step="0.5" id="pint-rendimiento" value="10" min="2" max="20" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <span class="text-[10px] text-slate-400 mt-1 block">Generalmente entre 8 y 12 m²/litro por mano.</span>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Presentación del Envase</label>
+                            <select id="pint-envase" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                                <option value="19">Cubeta / Barrica (19 Litros / 5 Galones)</option>
+                                <option value="4" selected>Galón (3.78 Litros)</option>
+                                <option value="1">Litro Unitario</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-xl transition shadow text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-calculator text-amber-400"></i> Calcular Pintura Necesaria
+                    </button>
+                </form>
+
+                <!-- Resultados Pintura -->
+                <div id="res-pintura" class="mt-6 hidden pt-6 border-t border-slate-100">
+                    <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-check text-emerald-600"></i> Resultados Obtenidos
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="pintura-cards-result">
+                        <!-- Inyectado por JS -->
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button onclick="app.agregarAlPresupuesto('pintura')" class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-4 py-2 rounded-xl text-xs transition shadow flex items-center gap-1.5">
+                            <i class="fa-solid fa-cart-plus"></i> Agregar al Presupuesto Global
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Pisos -->
+            <div id="tab-pisos" class="tab-content hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-border-all text-amber-500"></i> Pisos / Cerámica / Azulejos
+                        </h2>
+                        <p class="text-xs text-slate-500">Cálculo de piezas de loseta y cajas necesarias según área y porcentaje de corte.</p>
+                    </div>
+                    <span class="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-medium border border-emerald-200">Revestimientos</span>
+                </div>
+
+                <form id="form-pisos" onsubmit="app.calcularPisos(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Área a Cubrir (m²)</label>
+                            <input type="number" step="0.01" id="piso-area" required min="0.1" placeholder="Ej. 45.0" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Porcentaje de Desperdicio / Cortes (%)</label>
+                            <input type="number" step="1" id="piso-desperdicio" value="10" min="5" max="25" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Largo de la pieza (cm)</label>
+                            <input type="number" step="0.5" id="piso-largo" value="60" min="5" max="200" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Ancho de la pieza (cm)</label>
+                            <input type="number" step="0.5" id="piso-ancho" value="60" min="5" max="200" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Piezas por Caja</label>
+                            <input type="number" step="1" id="piso-por-caja" value="4" min="1" max="50" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-xl transition shadow text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-calculator text-amber-400"></i> Calcular Piezas y Cajas
+                    </button>
+                </form>
+
+                <!-- Resultados Pisos -->
+                <div id="res-pisos" class="mt-6 hidden pt-6 border-t border-slate-100">
+                    <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-check text-emerald-600"></i> Resultados Obtenidos
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="pisos-cards-result">
+                        <!-- Inyectado por JS -->
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button onclick="app.agregarAlPresupuesto('pisos')" class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-4 py-2 rounded-xl text-xs transition shadow flex items-center gap-1.5">
+                            <i class="fa-solid fa-cart-plus"></i> Agregar al Presupuesto Global
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Resumen y Presupuesto Global -->
+        <div class="space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sticky top-24">
+                <div class="border-b border-slate-100 pb-4 mb-4 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-file-invoice-dollar text-amber-500"></i> Presupuesto Consolidado
+                        </h2>
+                        <p class="text-xs text-slate-500">Lista global de materiales agregados y estimación de costos.</p>
+                    </div>
+                    <span id="badge-total-items" class="bg-slate-100 text-slate-800 text-xs px-2.5 py-0.5 rounded-full font-bold">0 ítems</span>
+                </div>
+
+                <!-- Tabla de Presupuesto Consolidado -->
+                <div class="overflow-x-auto max-h-[350px] overflow-y-auto border border-slate-100 rounded-xl mb-4">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="bg-slate-100 text-slate-700 sticky top-0">
+                            <tr>
+                                <th class="p-2.5 font-semibold">Material</th>
+                                <th class="p-2.5 font-semibold">Cant.</th>
+                                <th class="p-2.5 font-semibold">P. Unit</th>
+                                <th class="p-2.5 font-semibold text-right">Subtotal</th>
+                                <th class="p-2.5 text-center no-print">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="presupuesto-table-body" class="divide-y divide-slate-100">
+                            <!-- Estado vacío inicial -->
+                            <tr>
+                                <td colspan="5" class="p-6 text-center text-slate-400 text-xs">
+                                    <i class="fa-solid fa-folder-open text-2xl mb-1 block text-slate-300"></i>
+                                    Aún no hay materiales agregados. Realiza un cálculo y haz clic en "Agregar al Presupuesto".
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Resumen de Costo Final -->
+                <div class="bg-slate-900 text-white p-4 rounded-xl space-y-2 mb-4">
+                    <div class="flex justify-between items-center text-xs text-slate-300">
+                        <span>Subtotal Materiales:</span>
+                        <span id="summary-subtotal">$0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-slate-300">
+                        <span>Estimado Impuestos (IVA 16%):</span>
+                        <span id="summary-tax">$0.00</span>
+                    </div>
+                    <div class="border-t border-slate-800 pt-2 flex justify-between items-center text-sm font-bold">
+                        <span>Costo Total Estimado:</span>
+                        <span id="summary-grand-total" class="text-amber-400 text-base">$0.00</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 no-print">
+                    <button onclick="app.limpiarPresupuesto()" class="px-3 py-2 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-trash-can"></i> Limpiar Todo
+                    </button>
+                    <button onclick="app.exportarTexto()" class="px-3 py-2 text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl transition flex items-center justify-center gap-1 shadow">
+                        <i class="fa-solid fa-download"></i> Exportar Resumen
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel de Tips de Construcción -->
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-900 space-y-2">
+                <h4 class="font-bold flex items-center gap-1.5 text-amber-900">
+                    <i class="fa-solid fa-lightbulb text-amber-600"></i> Consejos Útiles de Obra
+                </h4>
+                <p class="leading-relaxed">
+                    Recuerda siempre considerar un porcentaje de desperdicio adecuado según la complejidad de los cortes (del 5% al 10% es lo estándar). Los precios unitarios son configurables directamente en la tabla haciendo clic sobre ellos.
+                </p>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 no-print">
+        <p>ConstruApp Cuantificación Profesional &copy; 2026 - Herramienta interactiva para ingenieros, arquitectos y constructores.</p>
+    </footer>
+
+    <script>
+        class ConstruccionApp {
+            constructor() {
+                this.presupuesto = [];
+                this.lastCalculated = {
+                    tipo: null,
+                    data: null
+                };
+                this.loadFromStorage();
+                this.initEventListeners();
+            }
+
+            initEventListeners() {
+                // Controlar cambio en tipo de mampostería
+                const selectTipo = document.getElementById('mamp-tipo');
+                if (selectTipo) {
+                    selectTipo.addEventListener('change', (e) => {
+                        const customDiv = document.getElementById('mamp-custom-dims');
+                        if (e.target.value === 'personalizado') {
+                            customDiv.classList.remove('hidden');
+                        } else {
+                            customDiv.classList.add('hidden');
+                        }
+                    });
+                }
+            }
+
+            switchTab(tabName) {
+                // Ocultar todas las pestañas
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('block'));
+
+                // Desactivar botones
+                const buttons = ['mamposteria', 'concreto', 'pintura', 'pisos'];
+                buttons.forEach(b => {
+                    const btn = document.getElementById(`tab-btn-${b}`);
+                    if (btn) {
+                        btn.className = "flex-1 min-w-[110px] py-2.5 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200";
+                    }
+                });
+
+                // Mostrar pestaña seleccionada
+                const activeTab = document.getElementById(`tab-${tabName}`);
+                if (activeTab) {
+                    activeTab.classList.remove('hidden');
+                    activeTab.classList.add('block');
+                }
+
+                // Activar botón correspondiente
+                const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+                if (activeBtn) {
+                    activeBtn.className = "flex-1 min-w-[110px] py-2.5 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 bg-amber-500 text-slate-900 shadow-sm";
+                }
+            }
+
+            calcularMamposteria(e) {
+                e.preventDefault();
+                const area = parseFloat(document.getElementById('mamp-area').value);
+                const tipo = document.getElementById('mamp-tipo').value;
+                const juntaCm = parseFloat(document.getElementById('mamp-junta').value) / 100; // a metros
+                const desperdicio = parseFloat(document.getElementById('mamp-desperdicio').value) / 100;
+
+                let largoM = 0.24, altoM = 0.07, espesorMuro = 0.15;
+
+                if (tipo === 'ladrillo_rojo') {
+                    largoM = 0.24; altoM = 0.07;
+                } else if (tipo === 'bloque_concreto') {
+                    largoM = 0.40; altoM = 0.20;
+                } else if (tipo === 'block_hueco') {
+                    largoM = 0.30; altoM = 0.15;
+                } else if (tipo === 'personalizado') {
+                    largoM = parseFloat(document.getElementById('mamp-largo').value) / 100;
+                    altoM = parseFloat(document.getElementById('mamp-alto').value) / 100;
+                }
+
+                // Cálculo de piezas netas considerando juntas
+                const largoTotalPieza = largoM + juntaCm;
+                const altoTotalPieza = altoM + juntaCm;
+                const piezasPorM2Neto = 1 / (largoTotalPieza * altoTotalPieza);
+                const piezasTotalesNetas = piezasPorM2Neto * area;
+                const piezasConDesperdicio = Math.ceil(piezasTotalesNetas * (1 + desperdicio));
+
+                // Estimación de mortero (aprox 0.025 m3 por m2 de muro estándar)
+                const volumenMorteroM2 = 0.030; 
+                const volumenTotalMortero = area * volumenMorteroM2 * (1 + desperdicio);
+                
+                // Proporción mortero 1:4 (Cemento:Arena) -> 1m3 mortero requiere aprox 300kg cemento (6 sacos de 50kg) y 1.15m3 arena
+                const sacosCemento = Math.ceil(volumenTotalMortero * 6);
+                const arenaM3 = parseFloat((volumenTotalMortero * 1.15).toFixed(2));
+
+                const resultadoHTML = `
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">Piezas Necesarias</span>
+                        <span class="text-xl font-bold text-slate-900">${piezasConDesperdicio}</span>
+                        <span class="text-[10px] text-emerald-600 block mt-1">+${Math.round(desperdicio*100)}% desperdicio inc.</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">Sacos de Cemento (50kg)</span>
+                        <span class="text-xl font-bold text-slate-900">${sacosCemento}</span>
+                        <span class="text-[10px] text-slate-400 block mt-1">Para mortero de junta</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">Arena para Mortero</span>
+                        <span class="text-xl font-bold text-slate-900">${arenaM3} m³</span>
+                        <span class="text-[10px] text-slate-400 block mt-1">Volumen total</span>
+                    </div>
+                `;
+
+                document.getElementById('mamposteria-cards-result').innerHTML = resultadoHTML;
+                document.getElementById('res-mamposteria').classList.remove('hidden');
+
+                this.lastCalculated.tipo = 'mamposteria';
+                this.lastCalculated.data = [
+                    { nombre: `Piezas de Mampostería (${tipo})`, cantidad: piezasConDesperdicio, unidad: 'pza', precioUnitario: 4.50 },
+                    { nombre: 'Cemento para Mortero (50kg)', cantidad: sacosCemento, unidad: 'saco', precioUnitario: 185.00 },
+                    { nombre: 'Arena fina para Mortero', cantidad: arenaM3, unidad: 'm³', precioUnitario: 420.00 }
+                ];
+            }
+
+            calcularConcreto(e) {
+                e.preventDefault();
+                const largo = parseFloat(document.getElementById('conc-largo').value);
+                const ancho = parseFloat(document.getElementById('conc-ancho').value);
+                const espesor = parseFloat(document.getElementById('conc-espesor').value);
+                const resistencia = document.getElementById('conc-dosificacion').value;
+                const desperdicio = parseFloat(document.getElementById('conc-desperdicio').value) / 100;
+
+                const volumenNeto = largo * ancho * espesor;
+                const volumenTotal = volumenNeto * (1 + desperdicio);
+
+                // Dosificaciones aproximadas por m3 de concreto:
+                // F'c 200: 7 sacos cemento, 0.55 m3 arena, 0.75 m3 grava
+                // F'c 250: 8.5 sacos cemento, 0.52 m3 arena, 0.72 m3 grava
+                // F'c 300: 10 sacos cemento, 0.48 m3 arena, 0.70 m3 grava
+                // Pobre: 5 sacos cemento, 0.65 m3 arena, 0.85 m3 grava
+                let factorCemento = 8.5, factorArena = 0.52, factorGrava = 0.72;
+                if (resistencia === '200') { factorCemento = 7.0; factorArena = 0.55; factorGrava = 0.75; }
+                else if (resistencia === '300') { factorCemento = 10.0; factorArena = 0.48; factorGrava = 0.70; }
+                else if (resistencia === 'pobre') { factorCemento = 5.0; factorArena = 0.65; factorGrava = 0.85; }
+
+                const sacosCemento = Math.ceil(volumenTotal * factorCemento);
+                const arenaM3 = parseFloat((volumenTotal * factorArena).toFixed(2));
+                const gravaM3 = parseFloat((volumenTotal * factorGrava).toFixed(2));
+
+                const resultadoHTML = `
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">Volumen Total</span>
+                        <span class="text-xl font-bold text-slate-900">${volumenTotal.toFixed(2)} m³</span>
+                        <span class="text-[10px] text-emerald-600 block mt-1">Incluye desperdicio</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">Cemento (50kg)</span>
+                        <span class="text-xl font-bold text-slate-900">${sacosCemento} sacos</span>
+                        <span class="text-[10px] text-slate-400 block mt-1">F'c ${resistencia} kg/cm²</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">Arena</span>
+                        <span class="text-xl font-bold text-slate-900">${arenaM3} m³</span>
+                        <span class="text-[10px] text-slate-400 block mt-1">Agregado fino</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">Grava (Triturada)</span>
+                        <span class="text-xl font-bold text-slate-900">${gravaM3} m³</span>
+                        <span class="text-[10px] text-slate-400 block mt-1">Agregado grueso</span>
+                    </div>
+                `;
+
+                document.getElementById('concreto-cards-result').innerHTML = resultadoHTML;
+                document.getElementById('res-concreto').classList.remove('hidden');
+
+                this.lastCalculated.tipo = 'concreto';
+                this.lastCalculated.data = [
+                    { nombre: `Concreto F'c ${resistencia} (Volumen)`, cantidad: parseFloat(volumenTotal.toFixed(2)), unidad: 'm³', precioUnitario: 1650.00 },
+                    { nombre: 'Sacos de Cemento (50kg)', cantidad: sacosCemento, unidad: 'saco', precioUnitario: 185.00 },
+                    { nombre: 'Arena de río', cantidad: arenaM3, unidad: 'm³', precioUnitario: 420.00 },
+                    { nombre: 'Grava triturada 3/4"', cantidad: gravaM3, unidad: 'm³', precioUnitario: 450.00 }
+                ];
+            }
+
+            calcularPintura(e) {
+                e.preventDefault();
+                const area = parseFloat(document.getElementById('pint-area').value);
+                const manos = parseInt(document.getElementById('pint-manos').value);
+                const rendimiento = parseFloat(document.getElementById('pint-rendimiento').value);
+                const envaseLitros = parseFloat(document.getElementById('pint-envase').value);
+
+                const litrosTotales = (area * manos) / rendimiento;
+                const envasesNecesarios = Math.ceil(litrosTotales / envaseLitros);
+
+                let nombreEnvase = 'Cubetas (19L)';
+                if (envaseLitros === 4) nombreEnvase = 'Galones (3.78L)';
+                if (envaseLitros === 1) nombreEnvase = 'Litros';
+
+                const resultadoHTML = `
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">Litros Totales</span>
+                        <span class="text-xl font-bold text-slate-900">${litrosTotales.toFixed(1)} L</span>
+                        <span class="text-[10px] text-emerald-600 block mt-1">${manos} capas aplicadas</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">Envases Requeridos</span>
+                        <span class="text-xl font-bold text-slate-900">${envasesNecesarios}</span>
+                        <span class="text-[10px] text-slate-400 block mt-1">${nombreEnvase}</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">Rendimiento Total</span>
+                        <span class="text-xl font-bold text-slate-900">${(area * manos).toFixed(0)} m²</span>
+                        <span class="text-[10px] text-slate-400 block mt-1">Área efectiva cubierta</span>
+                    </div>
+                `;
+
+                document.getElementById('pintura-cards-result').innerHTML = resultadoHTML;
+                document.getElementById('res-pintura').classList.remove('hidden');
+
+                this.lastCalculated.tipo = 'pintura';
+                this.lastCalculated.data = [
+                    { nombre: `Pintura Vinílica (${nombreEnvase})`, cantidad: envasesNecesarios, unidad: envaseLitros === 19 ? 'cubeta' : (envaseLitros === 4 ? 'galón' : 'litro'), precioUnitario: envaseLitros === 19 ? 1450.00 : (envaseLitros === 4 ? 380.00 : 110.00) }
+                ];
+            }
+
+            calcularPisos(e) {
+                e.preventDefault();
+                const area = parseFloat(document.getElementById('piso-area').value);
+                const desperdicio = parseFloat(document.getElementById('piso-desperdicio').value) / 100;
+                const largoPieza = parseFloat(document.getElementById('piso-largo').value) / 100; // a metros
+                const anchoPieza = parseFloat(document.getElementById('piso-ancho').value) / 100;
+                const piezasPorCaja = parseInt(document.getElementById('piso-por-caja').value);
+
+                const areaPieza = largoPieza * anchoPieza;
+                const piezasNetas = area / areaPieza;
+                const piezasConDesperdicio = Math.ceil(piezasNetas * (1 + desperdicio));
+                const cajasNecesarias = Math.ceil(piezasConDesperdicio / piezasPorCaja);
+
+                const resultadoHTML = `
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">Piezas Totales</span>
+                        <span class="text-xl font-bold text-slate-900">${piezasConDesperdicio}</span>
+                        <span class="text-[10px] text-emerald-600 block mt-1">+${Math.round(desperdicio*100)}% cortes</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">Cajas Necesarias</span>
+                        <span class="text-xl font-bold text-slate-900">${cajasNecesarias}</span>
+                        <span class="text-[10px] text-slate-400 block mt-1">${piezasPorCaja} pzas/caja</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                        <span class="text-xs text-slate-500 block mb-1">Área Cubierta Est.</span>
+                        <span class="text-xl font-bold text-slate-900">${(cajasNecesarias * piezasPorCaja * areaPieza).toFixed(1)} m²</span>
+                        <span class="text-[10px] text-slate-400 block mt-1">Con stock seguro</span>
+                    </div>
+                `;
+
+                document.getElementById('pisos-cards-result').innerHTML = resultadoHTML;
+                document.getElementById('res-pisos').classList.remove('hidden');
+
+                this.lastCalculated.tipo = 'pisos';
+                this.lastCalculated.data = [
+                    { nombre: `Cajas de Cerámica / Piso (${Math.round(largoPieza*100)}x${Math.round(anchoPieza*100)}cm)`, cantidad: cajasNecesarias, unidad: 'caja', precioUnitario: 320.00 }
+                ];
+            }
+
+            agregarAlPresupuesto(tipo) {
+                if (this.lastCalculated.tipo !== tipo || !this.lastCalculated.data) return;
+
+                this.lastCalculated.data.forEach(item => {
+                    // Verificar si ya existe un ítem similar
+                    const existing = this.presupuesto.find(p => p.nombre === item.nombre);
+                    if (existing) {
+                        existing.cantidad += item.cantidad;
+                    } else {
+                        this.presupuesto.push({ ...item });
+                    }
+                });
+
+                this.renderPresupuesto();
+                this.saveToStorage();
+                
+                // Mostrar notificación breve visual
+                this.mostrarAlertaExito("¡Materiales agregados al presupuesto global exitosamente!");
+            }
+
+            eliminarItemPresupuesto(index) {
+                this.presupuesto.splice(index, 1);
+                this.renderPresupuesto();
+                this.saveToStorage();
+            }
+
+            actualizarPrecioUnitario(index, nuevoPrecio) {
+                const precio = parseFloat(nuevoPrecio);
+                if (!isNaN(precio) && precio >= 0) {
+                    this.presupuesto[index].precioUnitario = precio;
+                    this.renderPresupuesto(false); // Mantener foco o evitar redibujado agresivo si fuera necesario
+                    this.saveToStorage();
+                }
+            }
+
+            actualizarCantidadItem(index, nuevaCantidad) {
+                const cant = parseFloat(nuevaCantidad);
+                if (!isNaN(cant) && cant >= 0) {
+                    this.presupuesto[index].cantidad = cant;
+                    this.renderPresupuesto(false);
+                    this.saveToStorage();
+                }
+            }
+
+            limpiarPresupuesto() {
+                if (confirm("¿Estás seguro de vaciar todo el presupuesto?")) {
+                    this.presupuesto = [];
+                    this.renderPresupuesto();
+                    this.saveToStorage();
+                }
+            }
+
+            resetAllData() {
+                if (confirm("¿Reiniciar toda la aplicación y limpiar datos guardados?")) {
+                    localStorage.removeItem('construapp_presupuesto');
+                    this.presupuesto = [];
+                    this.renderPresupuesto();
+                    location.reload();
+                }
+            }
+
+            renderPresupuesto() {
+                const tbody = document.getElementById('presupuesto-table-body');
+                const badge = document.getElementById('badge-total-items');
+                
+                badge.innerText = `${this.presupuesto.length} ítems`;
+
+                if (this.presupuesto.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="p-6 text-center text-slate-400 text-xs">
+                                <i class="fa-solid fa-folder-open text-2xl mb-1 block text-slate-300"></i>
+                                Aún no hay materiales agregados. Realiza un cálculo y haz clic en "Agregar al Presupuesto".
+                            </td>
+                        </tr>
+                    `;
+                    document.getElementById('summary-subtotal').innerText = '$0.00';
+                    document.getElementById('summary-tax').innerText = '$0.00';
+                    document.getElementById('summary-grand-total').innerText = '$0.00';
+                    return;
+                }
+
+                let subtotalGlobal = 0;
+                let html = '';
+
+                this.presupuesto.forEach((item, index) => {
+                    const subtotalItem = item.cantidad * item.precioUnitario;
+                    subtotalGlobal += subtotalItem;
+
+                    html += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-2.5 font-medium text-slate-900">${item.nombre}</td>
+                            <td class="p-2.5">
+                                <input type="number" step="any" value="${item.cantidad}" onchange="app.actualizarCantidadItem(${index}, this.value)" class="w-16 px-1.5 py-1 text-xs border border-slate-300 rounded bg-white">
+                                <span class="text-[10px] text-slate-400">${item.unidad}</span>
+                            </td>
+                            <td class="p-2.5">
+                                $<input type="number" step="any" value="${item.precioUnitario}" onchange="app.actualizarPrecioUnitario(${index}, this.value)" class="w-20 px-1.5 py-1 text-xs border border-slate-300 rounded bg-white">
+                            </td>
+                            <td class="p-2.5 text-right font-semibold text-slate-900">$${subtotalItem.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td class="p-2.5 text-center no-print">
+                                <button onclick="app.eliminarItemPresupuesto(${index})" class="text-rose-500 hover:text-rose-700 p-1 transition" title="Eliminar">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+
+                const impuesto = subtotalGlobal * 0.16;
+                const totalFinal = subtotalGlobal + impuesto;
+
+                document.getElementById('summary-subtotal').innerText = `$${subtotalGlobal.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                document.getElementById('summary-tax').innerText = `$${impuesto.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                document.getElementById('summary-grand-total').innerText = `$${totalFinal.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            }
+
+            exportarTexto() {
+                if (this.presupuesto.length === 0) {
+                    alert("No hay datos en el presupuesto para exportar.");
+                    return;
+                }
+
+                let texto = "=== REPORTE DE CUANTIFICACIÓN Y PRESUPUESTO DE OBRA ===\n\n";
+                let subtotal = 0;
+
+                this.presupuesto.forEach((item, i) => {
+                    const sub = item.cantidad * item.precioUnitario;
+                    subtotal += sub;
+                    texto += `${i + 1}. ${item.nombre}: ${item.cantidad} ${item.unidad} x $${item.precioUnitario.toFixed(2)} = $${sub.toFixed(2)}\n`;
+                });
+
+                const iva = subtotal * 0.16;
+                const total = subtotal + iva;
+
+                texto += `\nSubtotal: $${subtotal.toFixed(2)}`;
+                texto += `\nIVA (16%): $${iva.toFixed(2)}`;
+                texto += `\nTOTAL ESTIMADO: $${total.toFixed(2)}`;
+
+                // Crear archivo blob para descarga
+                const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'presupuesto_materiales_obra.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+
+            mostrarAlertaExito(mensaje) {
+                const div = document.createElement('div');
+                div.className = "fixed bottom-5 right-5 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-2 border border-slate-700 animate-bounce";
+                div.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i> ${mensaje}`;
+                document.body.appendChild(div);
+                setTimeout(() => {
+                    div.remove();
+                }, 3000);
+            }
+
+            saveToStorage() {
+                localStorage.setItem('construapp_presupuesto', JSON.stringify(this.presupuesto));
+            }
+
+            loadFromStorage() {
+                const data = localStorage.getItem('construapp_presupuesto');
+                if (data) {
+                    try {
+                        this.presupuesto = JSON.parse(data);
+                        this.renderPresupuesto();
+                    } catch (e) {
+                        console.error("Error al cargar localStorage", e);
+                    }
+                }
+            }
+        }
+
+        // Inicializar aplicación globalmente
+        const app = new ConstruccionApp();
+    </script>
+
+</body>
+</html>
